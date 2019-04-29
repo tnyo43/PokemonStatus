@@ -64,23 +64,44 @@ update msg model =
 
 -- VIEW
 
-showName : Maybe Pokemon -> Html msg
-showName p =
-    case p of
-        Just pokemon -> text (String.fromInt pokemon.no ++ " : " ++ pokemon.name)
-        Nothing -> text "no data"
+showName : Pokemon -> Html msg
+showName pokemon = text (String.fromInt pokemon.no ++ " : " ++ pokemon.name)
 
-showTypes : Maybe Pokemon -> Html msg
-showTypes p =
+showTypes : List Type -> Html msg
+showTypes types =
+        ul
+            []
+            ( List.map
+                ( \t -> li [] [ text ( typeToString t ) ] ) 
+                types
+            )
+
+showStats : List Int -> Html msg
+showStats stats =
+        table
+            []
+
+            ( List.map2
+                ( \p -> \s ->
+                        tr
+                            []
+                            [ td [] [ text p ]
+                            , td [] [ text "：" ]
+                            , td [] [ text ( String.fromInt s ) ]] )
+                Pokemon.statParams (List.reverse stats)
+            )
+
+showPokemon : Maybe Pokemon -> List (Html msg)
+showPokemon p =
     case p of
         Just pokemon ->
-            ul
-                []
-                ( List.map
-                    ( \t -> li [] [ text ( typeToString t ) ] ) 
-                    pokemon.types
-                )
-        Nothing -> text ""
+            [ showName pokemon
+            , showTypes pokemon.types
+            , showStats pokemon.stats
+            ]
+        Nothing ->
+            [ text "no data" ]
+
 
 view : Model -> Html Msg
 view model =
@@ -92,9 +113,6 @@ view model =
             , input [ placeholder "1", onInput UpdateInput ] []
             , button [ onClick GetData ] [ text "検索" ]
             ]
-        , div
-            []
-            [ showName model.pokemon
-            , showTypes model.pokemon ]
+        , div [] (showPokemon model.pokemon)
         ]
 

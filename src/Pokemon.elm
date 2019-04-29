@@ -14,6 +14,7 @@ type alias Pokemon =
     { no : Int
     , name : String
     , types : List Type
+    , stats : List Int
     }
 
 urlStats = "https://pokeapi.co/api/v2/pokemon/"
@@ -64,6 +65,18 @@ typeOfString t = case t of
     "fairy" -> Fairy
     _ -> Normal
 
+
+statParams : List String
+statParams =
+        [ "HP"
+        , "攻撃"
+        , "防御"
+        , "特攻"
+        , "特防"
+        , "素早さ"
+        ]
+
+
 typeDecoder : Decoder Type
 typeDecoder =
     Decode.field
@@ -75,7 +88,8 @@ typeDecoder =
 
 pokemonDecoder : Decoder Pokemon
 pokemonDecoder =
-    Decode.map3 Pokemon
+    Decode.map4 Pokemon
         (Decode.field "id" Decode.int )
         (Decode.field "name" Decode.string )
         (Decode.field "types" (Decode.list (Decode.field "type" typeDecoder)))
+        (Decode.field "stats" (Decode.list (Decode.field "base_stat" Decode.int)))
