@@ -10,6 +10,11 @@ type Type =
     | Psychic | Bug | Rock | Ghost | Dragon
     | Dark | Steel | Fairy
 
+type alias PokeJp =
+    { no : Int
+    , name : String
+    }
+
 type alias Pokemon =
     { no : Int
     , name : String
@@ -18,6 +23,7 @@ type alias Pokemon =
     }
 
 urlStats = "https://pokeapi.co/api/v2/pokemon/"
+urlJapanese = "https://raw.githubusercontent.com/kotofurumiya/pokemon_data/master/data/pokemon_data.json"
 
 
 typeToString : Type -> String
@@ -93,3 +99,13 @@ pokemonDecoder =
         (Decode.field "name" Decode.string )
         (Decode.field "types" (Decode.list (Decode.field "type" typeDecoder)))
         (Decode.field "stats" (Decode.list (Decode.field "base_stat" Decode.int)))
+
+
+pokeJpDecoder : Decoder PokeJp
+pokeJpDecoder =
+    Decode.map2 PokeJp
+        (Decode.field "no" Decode.int)
+        (Decode.field "name" Decode.string)
+
+pokeJpsDecoder : Decoder (List PokeJp)
+pokeJpsDecoder = Decode.list pokeJpDecoder

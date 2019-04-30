@@ -26,41 +26,63 @@ main =
 
 -- MODEL
 type alias Model =
-    { input : String
+    { inputNo : String
+    , inputName : String
     , pokemon : Maybe Pokemon
-    , data : Dict String Pokemon
+    , data : Dict String PokeJp
     }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Model "" Nothing Dict.empty , Cmd.none )
+    ( Model "" "" Nothing Dict.empty
+    , Http.get
+        { url = urlJapanese
+        , expect = Http.expectJson JapaneseData pokeJpsDecoder } )
 
 
 -- UPDATE
 
 type Msg
-    = UpdateInput String
-    | GetData
+    = UpdateNameInput String
+    | GetNameData
     | NewData (Result Http.Error Pokemon)
+    | JapaneseData (Result Http.Error (List PokeJp))
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        UpdateInput txt ->
-            ( { model | input = txt }, Cmd.none )
-
-        GetData ->
-            ( model
-            , Http.get
-                { url = urlStats ++ model.input
-                , expect = Http.expectJson NewData pokemonDecoder })
-
         NewData res ->
             case res of
                 Ok poke -> ( { model | pokemon = Just poke }, Cmd.none )
                 Err e -> ( { model | pokemon = Nothing }, Cmd.none )
+
+        GetNameData ->
+            case Dict.get model.inputName model.data of
+                Just poke ->
+                    ( model
+                    , Http.get
+                            { url = urlStats ++ (String.fromInt poke.no)
+                            , expect = Http.expectJson NewData pokemonDecoder })
+
+                Nothing -> ( { model | pokemon = Nothing }, Cmd.none )
+
+        UpdateNameInput txt ->
+            ( { model | inputName = txt }, Cmd.none )
+
+        JapaneseData res ->
+            case res of
+                Ok lst -> 
+                    let
+                        dict = List.foldl
+                                (\p -> \acc -> Dict.insert p.name p acc)
+                                Dict.empty
+                                lst
+                    in
+                    ( { model | data = dict }, Cmd.none )
+                Err e -> ( { model | data = Dict.empty }, Cmd.none )
+
 
 -- VIEW
 
@@ -107,11 +129,11 @@ view : Model -> Html Msg
 view model =
     div []
         [ h1 [] [ text "ポケモンステータス"]
-        , div 
+        , div
             []
-            [ text "図鑑番号"
-            , input [ placeholder "1", onInput UpdateInput ] []
-            , button [ onClick GetData ] [ text "検索" ]
+            [ text "名前"
+            , input [ placeholder "フシギダネ", onInput UpdateNameInput ] []
+            , button [ onClick GetNameData ] [ text "検索" ]
             ]
         , div [] (showPokemon model.pokemon)
         ]
