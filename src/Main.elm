@@ -89,6 +89,9 @@ update msg model =
 showName : Pokemon -> Html msg
 showName pokemon = text (String.fromInt pokemon.no ++ " : " ++ pokemon.name)
 
+showImage : String -> Html msg
+showImage url = img [ src url, width 200 ] []
+
 showTypes : List Type -> Html msg
 showTypes types =
         ul
@@ -118,6 +121,7 @@ showPokemon p =
     case p of
         Just pokemon ->
             [ showName pokemon
+            , showImage pokemon.imgUrl
             , showTypes pokemon.types
             , showStats pokemon.stats
             ]

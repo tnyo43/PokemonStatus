@@ -18,6 +18,7 @@ type alias PokeJp =
 type alias Pokemon =
     { no : Int
     , name : String
+    , imgUrl : String
     , types : List Type
     , stats : List Int
     }
@@ -94,9 +95,10 @@ typeDecoder =
 
 pokemonDecoder : Decoder Pokemon
 pokemonDecoder =
-    Decode.map4 Pokemon
+    Decode.map5 Pokemon
         (Decode.field "id" Decode.int )
         (Decode.field "name" Decode.string )
+        (Decode.field "sprites" (Decode.field "front_default" Decode.string))
         (Decode.field "types" (Decode.list (Decode.field "type" typeDecoder)))
         (Decode.field "stats" (Decode.list (Decode.field "base_stat" Decode.int)))
 
