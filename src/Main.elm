@@ -51,6 +51,7 @@ type Msg
     | JapaneseData (Result Http.Error (List PokeJp))
     | UpdateIndiv Int String
     | UpdateEff Int String
+    | UpdateNatureCorrect Int
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -122,7 +123,24 @@ update msg model =
                     ( { model | pokemon = poke_ }, Cmd.none )
                 Nothing -> ( model, Cmd.none )
 
-
+        UpdateNatureCorrect n ->
+            case model.pokemon of
+                Just poke ->
+                    let
+                        ncs = 
+                            case Util.getFromList poke.ncs n of
+                                Just nc ->
+                                    nc
+                                    |> Pokemon.nextNatureCorrect
+                                    |> Util.updateList poke.ncs n
+                                Nothing -> Nothing
+                        poke_ =
+                            case ncs of
+                                Just ncs_ -> Just { poke | ncs = ncs_ }
+                                Nothing -> Just poke
+                    in
+                    ( { model | pokemon = poke_ }, Cmd.none )
+                Nothing -> ( model, Cmd.none )
 -- VIEW
 
 showName : Pokemon -> Html Msg
@@ -152,10 +170,12 @@ showStats pokemon =
                     , td [] []
                     , td [] [ text "種族値" ]
                     , td [] [ text "個体値" ]
+                    , td [] [ text "努力値" ]
+                    , td [] [ text "性格補正" ]
                     , td [] [ text "実数値" ]]
                 ::
-                List.map4
-                    ( \(i, p) s ind eff->
+                List.map5
+                    ( \(i, p) s ind eff nc ->
                             tr
                                 []
                                 [ td [] [ text p ]
@@ -175,13 +195,20 @@ showStats pokemon =
                                             ]
                                             []
                                         ]
-                                , td [] [ text (Pokemon.calcStatus 50 i s ind eff 1.0 |> String.fromInt )]
+                                , if i == 0 then td [] []
+                                  else
+                                    td [] [ button
+                                            [ onClick (UpdateNatureCorrect i) ]
+                                            [ Pokemon.stringOfNatureCorrect nc |> text ]
+                                        ]
+                                , td [] [ text (Pokemon.calcStatus 50 i s ind eff nc |> String.fromInt )]
                                 ]
                     )
                     (List.indexedMap Tuple.pair Pokemon.statParams)
-                    (List.reverse pokemon.stats) 
+                    pokemon.stats
                     pokemon.indiv
                     pokemon.effort
+                    pokemon.ncs
             )
 
 

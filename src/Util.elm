@@ -21,3 +21,11 @@ updateList lst i x =
                         Nothing -> []
         in
         Just (sub lst i x)
+
+getFromList : List a -> Int -> Maybe a
+getFromList lst i =
+    if i == 0 then List.head lst
+    else
+        case List.tail lst of
+            Just t -> getFromList t (i-1)
+            Nothing -> Nothing
