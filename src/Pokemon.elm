@@ -21,6 +21,8 @@ type alias Pokemon =
     , imgUrl : String
     , types : List Type
     , stats : List Int
+    , indiv : List Int
+    , effort : List Int
     }
 
 urlStats = "https://pokeapi.co/api/v2/pokemon/"
@@ -83,6 +85,15 @@ statParams =
         , "素早さ"
         ]
 
+calcStatus : Int -> Int -> Int -> Int -> Int -> Float -> Int
+calcStatus level idx stat ind eff cmc =
+    if idx == 0 then
+        (stat * 2 + ind + eff // 4) * level // 100 + level + 10
+    else
+        (stat * 2 + ind + eff // 4) * level // 100 + 5
+        |> toFloat
+        |> (*) cmc
+        |> floor
 
 typeDecoder : Decoder Type
 typeDecoder =
@@ -95,12 +106,14 @@ typeDecoder =
 
 pokemonDecoder : Decoder Pokemon
 pokemonDecoder =
-    Decode.map5 Pokemon
+    Decode.map7 Pokemon
         (Decode.field "id" Decode.int )
         (Decode.field "name" Decode.string )
         (Decode.field "sprites" (Decode.field "front_default" Decode.string))
         (Decode.field "types" (Decode.list (Decode.field "type" typeDecoder)))
         (Decode.field "stats" (Decode.list (Decode.field "base_stat" Decode.int)))
+        (List.repeat 6 0 |> Decode.succeed)
+        (List.repeat 6 0 |> Decode.succeed)
 
 
 pokeJpDecoder : Decoder PokeJp

@@ -8,6 +8,7 @@ import Html.Events exposing (..)
 import Http
 import Pokemon exposing (..)
 import Task exposing (Task)
+import Util exposing (..)
 
 
 main : Program () Model Msg
@@ -48,6 +49,8 @@ type Msg
     | GetNameData
     | NewData (Result Http.Error Pokemon)
     | JapaneseData (Result Http.Error (List PokeJp))
+    | UpdateIndiv Int String
+    | UpdateEff Int String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -83,16 +86,52 @@ update msg model =
                     ( { model | data = dict }, Cmd.none )
                 Err e -> ( { model | data = Dict.empty }, Cmd.none )
 
+        UpdateIndiv n txt ->
+            case model.pokemon of
+                Just poke ->
+                    let
+                        indiv_ =
+                            case String.toInt txt of
+                                Just x ->
+                                    if x >= 0 && x <= 31 then
+                                        case Util.updateList poke.indiv n x of
+                                            Just lst -> lst
+                                            Nothing -> poke.indiv
+                                    else poke.indiv
+                                Nothing -> poke.indiv
+                        poke_ = Just { poke | indiv = indiv_ }
+                    in
+                    ( { model | pokemon = poke_ }, Cmd.none )
+                Nothing -> ( model, Cmd.none )
+
+        UpdateEff n txt ->
+            case model.pokemon of
+                Just poke ->
+                    let
+                        eff_ =
+                            case String.toInt txt of
+                                Just x ->
+                                    if x >= 0 && x <= 252 then
+                                        case Util.updateList poke.effort n x of
+                                            Just lst -> lst
+                                            Nothing -> poke.effort
+                                    else poke.effort
+                                Nothing -> poke.effort
+                        poke_ = Just { poke | effort = eff_ }
+                    in
+                    ( { model | pokemon = poke_ }, Cmd.none )
+                Nothing -> ( model, Cmd.none )
+
 
 -- VIEW
 
-showName : Pokemon -> Html msg
+showName : Pokemon -> Html Msg
 showName pokemon = text (String.fromInt pokemon.no ++ " : " ++ pokemon.name)
 
-showImage : String -> Html msg
+showImage : String -> Html Msg
 showImage url = img [ src url, width 200 ] []
 
-showTypes : List Type -> Html msg
+showTypes : List Type -> Html Msg
 showTypes types =
         ul
             []
@@ -101,29 +140,59 @@ showTypes types =
                 types
             )
 
-showStats : List Int -> Html msg
-showStats stats =
+showStats : Pokemon -> Html Msg
+showStats pokemon = 
+
         table
             []
-
-            ( List.map2
-                ( \p -> \s ->
-                        tr
-                            []
-                            [ td [] [ text p ]
-                            , td [] [ text "：" ]
-                            , td [] [ text ( String.fromInt s ) ]] )
-                Pokemon.statParams (List.reverse stats)
+            (
+                tr
+                    []
+                    [ td [] []
+                    , td [] []
+                    , td [] [ text "種族値" ]
+                    , td [] [ text "個体値" ]
+                    , td [] [ text "実数値" ]]
+                ::
+                List.map4
+                    ( \(i, p) s ind eff->
+                            tr
+                                []
+                                [ td [] [ text p ]
+                                , td [] [ text "：" ]
+                                , td [] [ text ( String.fromInt s ) ]
+                                , td [] [ input
+                                            [ onInput (UpdateIndiv i)
+                                            , type_ "number"
+                                            , String.fromInt ind |> value 
+                                            ]
+                                            []
+                                        ]
+                                , td [] [ input
+                                            [ onInput (UpdateEff i)
+                                            , type_ "number"
+                                            , String.fromInt eff |> value 
+                                            ]
+                                            []
+                                        ]
+                                , td [] [ text (Pokemon.calcStatus 50 i s ind eff 1.0 |> String.fromInt )]
+                                ]
+                    )
+                    (List.indexedMap Tuple.pair Pokemon.statParams)
+                    (List.reverse pokemon.stats) 
+                    pokemon.indiv
+                    pokemon.effort
             )
 
-showPokemon : Maybe Pokemon -> List (Html msg)
+
+showPokemon : Maybe Pokemon -> List (Html Msg)
 showPokemon p =
     case p of
         Just pokemon ->
             [ showName pokemon
             , showImage pokemon.imgUrl
             , showTypes pokemon.types
-            , showStats pokemon.stats
+            , showStats pokemon
             ]
         Nothing ->
             [ text "no data" ]
