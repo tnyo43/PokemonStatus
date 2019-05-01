@@ -198,7 +198,8 @@ showStats pokemon =
                                 , if i == 0 then td [] []
                                   else
                                     td [] [ button
-                                            [ onClick (UpdateNatureCorrect i) ]
+                                            [ onClick (UpdateNatureCorrect i)
+                                            , style "color" (buttonColorNC nc)]
                                             [ Pokemon.stringOfNatureCorrect nc |> text ]
                                         ]
                                 , td [] [ text (Pokemon.calcStatus 50 i s ind eff nc |> String.fromInt )]
@@ -209,7 +210,27 @@ showStats pokemon =
                     pokemon.indiv
                     pokemon.effort
                     pokemon.ncs
+                ++
+                [tr
+                    []
+                    [ td [] []
+                    , td [] []
+                    , td [] []
+                    , td [] []
+                    , if isValidEffort pokemon then td [] []
+                      else td [ style "color" "red" ] [ text "努力値の合計は510まで" ]
+                    , if isValidNatureCorrect pokemon then td [] []
+                      else td [ style "color" "red" ] [ text "不正な補正の割り当て" ]
+                    , td [] []
+                    ]]
             )
+
+buttonColorNC : NatureCorrect -> String
+buttonColorNC nc =
+    case nc of
+        Increase -> "green"
+        Decrease -> "red"
+        Unchange -> ""
 
 
 showPokemon : Maybe Pokemon -> List (Html Msg)

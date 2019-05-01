@@ -128,6 +128,22 @@ calcAllStatus pokemon =
         pokemon.effort
         pokemon.ncs
 
+isValidNatureCorrect : Pokemon -> Bool
+isValidNatureCorrect pokemon =
+    let
+        count target lst =
+            case lst of
+                [] -> 0
+                head::tail -> (if head == target then 1 else 0) + count target tail
+        inc = count Increase pokemon.ncs
+        dec = count Decrease pokemon.ncs
+    in
+    inc == dec && inc <= 1
+
+isValidEffort : Pokemon -> Bool
+isValidEffort pokemon =
+    List.all (\x -> x >= 0) pokemon.effort && List.sum pokemon.effort <= 510
+
 typeDecoder : Decoder Type
 typeDecoder =
     Decode.field
