@@ -1,5 +1,6 @@
 module Pokemon exposing (..)
 
+import Dict exposing (Dict)
 import Json.Decode as Decode exposing (Decoder)
 
 
@@ -87,6 +88,13 @@ statParams =
         , "特防"
         , "素早さ"
         ]
+
+getPokemonNameDict : List PokeJp -> Dict String Int
+getPokemonNameDict lst =
+    List.foldl
+        (\p -> \acc -> Dict.insert p.name p.no acc)
+        Dict.empty
+        lst
 
 nextNatureCorrect : NatureCorrect -> NatureCorrect
 nextNatureCorrect nature =

@@ -1,5 +1,6 @@
 module Example exposing (..)
 
+import Dict exposing (Dict)
 import Expect exposing (Expectation)
 import Pokemon as P
 import Test exposing (..)
@@ -57,6 +58,15 @@ zubutoiHBPikushi =
         [ 252, 0, 252, 0, 0, 4 ]
         [ P.Unchange, P.Decrease, P.Increase, P.Unchange, P.Unchange, P.Unchange ]
 
+pokeJpList =
+    [ P.PokeJp 1 "ピカチュウ"
+    , P.PokeJp 2 "コダック"
+    , P.PokeJp 100 "ウソッキー"
+    , P.PokeJp 20 "ライボルト"
+    ]
+
+pokeJpDict = P.getPokemonNameDict pokeJpList
+
 
 suite : Test
 suite =
@@ -100,5 +110,12 @@ suite =
             , testEqual "ゲッコウガのDに3振り（意味なし）" 91 ( P.calcStatus 50 4 71 31 3 P.Unchange )
             , testEqual "HPは上昇補正されない" ( P.calcStatus 50 0 72 31 252 P.Unchange ) ( P.calcStatus 50 0 72 31 252 P.Increase )
             , testEqual "HPは下降補正もされない" ( P.calcStatus 50 0 72 31 252 P.Unchange ) ( P.calcStatus 50 0 72 31 252 P.Decrease )
+            ]
+        , describe "日本語の名前と番号の辞書"
+            [ testEqual "ピカチュウは1" (Dict.get "ピカチュウ" pokeJpDict) (Just 1)
+            , testEqual "コダックは2" (Dict.get "コダック" pokeJpDict) (Just 2)
+            , testEqual "ライボルトは20" (Dict.get "ライボルト" pokeJpDict) (Just 20)
+            , testEqual "ウソッキーは100" (Dict.get "ウソッキー" pokeJpDict) (Just 100)
+            , testEqual "ギルガルドはいない" (Dict.get "ギルガルド" pokeJpDict) Nothing
             ]
         ]

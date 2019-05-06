@@ -4498,9 +4498,9 @@ function _Browser_load(url)
 var author$project$Main$JapaneseData = function (a) {
 	return {$: 'JapaneseData', a: a};
 };
-var author$project$Main$Model = F4(
-	function (inputNo, inputName, pokemon, data) {
-		return {data: data, inputName: inputName, inputNo: inputNo, pokemon: pokemon};
+var author$project$Main$Model = F3(
+	function (inputName, pokemon, data) {
+		return {data: data, inputName: inputName, pokemon: pokemon};
 	});
 var author$project$Pokemon$PokeJp = F2(
 	function (no, name) {
@@ -5876,7 +5876,7 @@ var elm$http$Http$get = function (r) {
 };
 var author$project$Main$init = function (_n0) {
 	return _Utils_Tuple2(
-		A4(author$project$Main$Model, '', '', elm$core$Maybe$Nothing, elm$core$Dict$empty),
+		A3(author$project$Main$Model, '', elm$core$Maybe$Nothing, elm$core$Dict$empty),
 		elm$http$Http$get(
 			{
 				expect: A2(elm$http$Http$expectJson, author$project$Main$JapaneseData, author$project$Pokemon$pokeJpsDecoder),
@@ -5885,6 +5885,17 @@ var author$project$Main$init = function (_n0) {
 };
 var author$project$Main$NewData = function (a) {
 	return {$: 'NewData', a: a};
+};
+var author$project$Pokemon$getPokemonNameDict = function (lst) {
+	return A3(
+		elm$core$List$foldl,
+		function (p) {
+			return function (acc) {
+				return A3(elm$core$Dict$insert, p.name, p.no, acc);
+			};
+		},
+		elm$core$Dict$empty,
+		lst);
 };
 var author$project$Pokemon$Decrease = {$: 'Decrease'};
 var author$project$Pokemon$Increase = {$: 'Increase'};
@@ -6130,7 +6141,7 @@ var author$project$Main$update = F2(
 			case 'GetNameData':
 				var _n2 = A2(elm$core$Dict$get, model.inputName, model.data);
 				if (_n2.$ === 'Just') {
-					var poke = _n2.a;
+					var idx = _n2.a;
 					return _Utils_Tuple2(
 						model,
 						elm$http$Http$get(
@@ -6138,7 +6149,7 @@ var author$project$Main$update = F2(
 								expect: A2(elm$http$Http$expectJson, author$project$Main$NewData, author$project$Pokemon$pokemonDecoder),
 								url: _Utils_ap(
 									author$project$Pokemon$urlStats,
-									elm$core$String$fromInt(poke.no))
+									elm$core$String$fromInt(idx))
 							}));
 				} else {
 					return _Utils_Tuple2(
@@ -6158,19 +6169,12 @@ var author$project$Main$update = F2(
 				var res = msg.a;
 				if (res.$ === 'Ok') {
 					var lst = res.a;
-					var dict = A3(
-						elm$core$List$foldl,
-						function (p) {
-							return function (acc) {
-								return A3(elm$core$Dict$insert, p.name, p, acc);
-							};
-						},
-						elm$core$Dict$empty,
-						lst);
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
-							{data: dict}),
+							{
+								data: author$project$Pokemon$getPokemonNameDict(lst)
+							}),
 						elm$core$Platform$Cmd$none);
 				} else {
 					var e = res.a;

@@ -27,16 +27,15 @@ main =
 
 -- MODEL
 type alias Model =
-    { inputNo : String
-    , inputName : String
+    { inputName : String
     , pokemon : Maybe Pokemon
-    , data : Dict String PokeJp
+    , data : Dict String Int
     }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Model "" "" Nothing Dict.empty
+    ( Model "" Nothing Dict.empty
     , Http.get
         { url = urlJapanese
         , expect = Http.expectJson JapaneseData pokeJpsDecoder } )
@@ -64,10 +63,10 @@ update msg model =
 
         GetNameData ->
             case Dict.get model.inputName model.data of
-                Just poke ->
+                Just idx ->
                     ( model
                     , Http.get
-                            { url = urlStats ++ (String.fromInt poke.no)
+                            { url = urlStats ++ (String.fromInt idx)
                             , expect = Http.expectJson NewData pokemonDecoder })
 
                 Nothing -> ( { model | pokemon = Nothing }, Cmd.none )
@@ -77,14 +76,8 @@ update msg model =
 
         JapaneseData res ->
             case res of
-                Ok lst -> 
-                    let
-                        dict = List.foldl
-                                (\p -> \acc -> Dict.insert p.name p acc)
-                                Dict.empty
-                                lst
-                    in
-                    ( { model | data = dict }, Cmd.none )
+                Ok lst ->
+                    ( { model | data = Pokemon.getPokemonNameDict lst }, Cmd.none )
                 Err e -> ( { model | data = Dict.empty }, Cmd.none )
 
         UpdateIndiv n txt ->
